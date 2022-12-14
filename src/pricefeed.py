@@ -38,11 +38,19 @@ def price_feed_update_needed(base: float) -> bool:
                     12 * 3600
                 ):
                     logging.info(
-                        f"Price feed un-changed | Base: {base:.3f} | "
+                        f"Price feed un-changed  | Base Now: {base:.3f} | "
+                        f"Prev Base: {prev_base:.3f} | "
                         f"Change: {per_diff*100:.1f} % | "
                         f"Age: {quote_timediff}"
                     )
                     return False
+                else:
+                    logging.info(
+                        f"Price feed needs update | Base Now: {base:.3f} | "
+                        f"Prev Base: {prev_base:.3f} | "
+                        f"Change: {per_diff*100:.1f} % | "
+                        f"Age: {quote_timediff}"
+                    )
     except Exception as ex:
         logging.error(f"Problem checking old feed price {ex}")
     return True
@@ -104,7 +112,7 @@ async def keep_publishing_price_feed():
     while True:
         try:
             success = await publish_feed()
-            await asyncio.sleep(60 * 1)
+            await asyncio.sleep(60 * 15)
         except HiveKeyError:
             break
         except Exception as ex:
