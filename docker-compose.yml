@@ -1,0 +1,11 @@
+  pricefeed:
+    container_name: v4vapp-pricefeed
+    image: brianoflondon/v4vapphivepricefeed:latest
+    logging:
+      driver: "json-file"
+      options:
+          max-file: "5"
+          max-size: "10m"
+    env_file:
+      - ".env"
+    restart: unless-stopped
