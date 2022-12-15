@@ -9,13 +9,21 @@ from lighthive.client import Client
 from lighthive.datastructures import Operation
 from lighthive.exceptions import RPCNodeException
 
+from v4vapp_hive_pricefeed import __version__
+
 HIVE_WITNESS_NAME = os.getenv("HIVE_WITNESS_NAME")
 HIVE_WITNESS_ACTIVE_KEY = os.getenv("HIVE_WITNESS_ACTIVE_KEY")
-PRICE_FEED_MIN_PUBLISH_TIME_HOURS=12
-PRICE_FEED_MIN_PERCENTAGE_DELTA=0.02
+PRICE_FEED_MIN_PUBLISH_TIME_HOURS = 12
+PRICE_FEED_MIN_PERCENTAGE_DELTA = 0.02
+
 
 class HiveKeyError(Exception):
     pass
+
+
+class V4VApiError(Exception):
+    pass
+
 
 def price_feed_update_needed(base: float) -> bool:
     """
@@ -81,10 +89,15 @@ async def publish_feed(publisher: str = "brianoflondon"):
                     json.dump(
                         {"base": base, "timestamp": datetime.utcnow().timestamp()}, f
                     )
+        else:
+            logging.error(f"Problem with api.v4v.app")
+            raise V4VApiError(resp)
 
     except ValueError as ex:
-        if ['Error loading Base58 object' in arg for arg in ex.args]:
-            logging.error("Hive Active key is not a valid Base58 key, check and try again.")
+        if ["Error loading Base58 object" in arg for arg in ex.args]:
+            logging.error(
+                "Hive Active key is not a valid Base58 key, check and try again."
+            )
             raise HiveKeyError
         logging.error(ex)
         raise HiveKeyError
@@ -95,28 +108,45 @@ async def publish_feed(publisher: str = "brianoflondon"):
 
     except RPCNodeException as ex:
         if ["Missing Active Authority" in arg for arg in ex.args]:
-            logging.error(f"Given Active Key does not have correct authority for {publisher}")
+            logging.error(
+                f"Given Active Key does not have correct authority for {publisher}"
+            )
             raise HiveKeyError
         logging.error(ex)
 
-    except Exception as ex:
-        logging.exception(ex)
-        logging.error(f"Exception publishing price feed: {ex}")
+    except (httpx.ConnectError, V4VApiError) as ex:
+        raise
 
+    except Exception as ex:
+        logging.error(f"Exception publishing price feed: {ex}")
+        raise
 
 
 async def keep_publishing_price_feed():
     """
     Publishes a price feed for my witness, this will move to its own project soon
     """
+    failure_stop = 20
+    errors = 0
     while True:
         try:
             success = await publish_feed()
             await asyncio.sleep(60 * 15)
         except HiveKeyError:
             break
+        except (httpx.ConnectError, V4VApiError) as ex:
+            sleep_time = 10 + 5 * errors ** 2
+            logging.error(
+                f"Problem connecting to api.v4v.app: {ex} | Failure: {errors+1} | Sleeping: {sleep_time}s"
+            )
+            await asyncio.sleep(sleep_time)
         except Exception as ex:
             logging.exception(ex)
+        finally:
+            errors += 1
+            if errors > failure_stop - 1:
+                logging.error(f"{failure_stop} Failures, sorry we have to stop.")
+                break
 
 
 async def main_loop():
@@ -132,12 +162,9 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)-8s %(module)-14s %(lineno) 5d : %(message)s",
         datefmt="%m-%dT%H:%M:%S",
     )
-    logging.info(f"-------{__file__}----------------------")
-    logging.info(f"Running at {datetime.now()}")
-    logging.info(f"Testnet: {os.getenv('TESTNET')}")
-    logging.info(f"-------{__file__}----------------------")
-
-    # asyncio.run(main_loop())
+    logging.info(f"-------V4VAPP Hive Pricefeed Version {__version__}-")
+    logging.info(f"Starting at {datetime.now()}")
+    # logging.info(f"Testnet: {os.getenv('TESTNET')}")
 
     try:
         asyncio.run(main_loop())
