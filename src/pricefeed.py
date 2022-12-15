@@ -130,7 +130,7 @@ async def keep_publishing_price_feed():
     errors = 0
     while True:
         try:
-            success = await publish_feed()
+            success = await publish_feed(HIVE_WITNESS_NAME)
             await asyncio.sleep(60 * 15)
         except HiveKeyError:
             break
