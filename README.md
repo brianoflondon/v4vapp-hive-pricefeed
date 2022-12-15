@@ -12,6 +12,8 @@ docker run --rm -d --name=v4vapp-pricefeed \
     brianoflondon/v4vapphivepricefeed:latest
 ```
 
+Once it is running you can check on it with `docker logs v4vapp-pricefeed -f` to stream the logs. If you want to stop it, `docker stop v4vapp-pricefeed` will do that.
+
 ## Running in Docker Compose
 
 If you want to use Docker Compose there is an example in this repo. There is also a sample `.sample.env` file: edit this with your Witness name and key, save it as `.env` and you should be good to go.
