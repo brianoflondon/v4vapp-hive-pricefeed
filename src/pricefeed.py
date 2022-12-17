@@ -131,19 +131,22 @@ async def keep_publishing_price_feed():
     while True:
         try:
             success = await publish_feed(HIVE_WITNESS_NAME)
+            errors = 0
             await asyncio.sleep(60 * 15)
         except HiveKeyError:
+            errors += 1
             break
         except (httpx.ConnectError, V4VApiError) as ex:
             sleep_time = 10 + 5 * errors ** 2
             logging.error(
                 f"Problem connecting to api.v4v.app: {ex} | Failure: {errors+1} | Sleeping: {sleep_time}s"
             )
+            errors += 1
             await asyncio.sleep(sleep_time)
         except Exception as ex:
+            errors += 1
             logging.exception(ex)
         finally:
-            errors += 1
             if errors > failure_stop - 1:
                 logging.error(f"{failure_stop} Failures, sorry we have to stop.")
                 break
