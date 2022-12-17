@@ -7,6 +7,7 @@ As long as you already have Docker installed on your machine, the following comm
 
 ```shell
 docker run --rm -d --name=v4vapp-pricefeed \
+    --restart unless-stopped \
     --env HIVE_WITNESS_NAME=your_witness_name \
     --env HIVE_WITNESS_ACTIVE_KEY=your_witness_active_key  \
     brianoflondon/v4vapphivepricefeed:latest
