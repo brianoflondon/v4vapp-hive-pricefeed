@@ -6,7 +6,7 @@ This is a simple price feed for a Hive Witness to run.
 As long as you already have Docker installed on your machine, the following command line will work
 
 ```shell
-docker run --rm -d --name=v4vapp-pricefeed \
+docker run -d --name=v4vapp-pricefeed \
     --restart unless-stopped \
     --env HIVE_WITNESS_NAME=your_witness_name \
     --env HIVE_WITNESS_ACTIVE_KEY=your_witness_active_key  \

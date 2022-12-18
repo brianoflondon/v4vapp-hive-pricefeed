@@ -118,6 +118,7 @@ async def publish_feed(publisher: str = "brianoflondon"):
         raise
 
     except Exception as ex:
+        logging.exception(ex)
         logging.error(f"Exception publishing price feed: {ex}")
         raise
 
@@ -165,7 +166,7 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)-8s %(module)-14s %(lineno) 5d : %(message)s",
         datefmt="%m-%dT%H:%M:%S",
     )
-    logging.info(f"-------V4VAPP Hive Pricefeed Version {__version__}-")
+    logging.info(f"-------V4VAPP Hive Pricefeed Version {__version__}  -")
     logging.info(f"Starting at {datetime.now()}")
     # logging.info(f"Testnet: {os.getenv('TESTNET')}")
 
