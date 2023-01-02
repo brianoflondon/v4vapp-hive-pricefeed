@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "v4vapp-hive-pricefeed"
-version = "1.0.2"
+version = "1.0.3"
 description = "An automatic price feed for Hive Witnesses"
 authors = ["brianoflondon <brian@v4v.app>"]
 license = "MIT"

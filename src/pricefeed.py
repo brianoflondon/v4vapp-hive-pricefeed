@@ -137,8 +137,8 @@ async def keep_publishing_price_feed():
         except HiveKeyError:
             errors += 1
             break
-        except (httpx.ConnectError, V4VApiError) as ex:
-            sleep_time = 10 + 5 * errors ** 2
+        except (httpx.ConnectError, httpx.ReadTimeout, V4VApiError) as ex:
+            sleep_time = 10 + 5 * errors**2
             logging.error(
                 f"Problem connecting to api.v4v.app: {ex} | Failure: {errors+1} | Sleeping: {sleep_time}s"
             )
@@ -168,6 +168,15 @@ if __name__ == "__main__":
     )
     logging.info(f"-------V4VAPP Hive Pricefeed Version {__version__}  -")
     logging.info(f"Starting at {datetime.now()}")
+
+    if not HIVE_WITNESS_ACTIVE_KEY or not HIVE_WITNESS_NAME:
+        logging.error(
+            "Hive Witness Active Key or Witness Name not set, check Environment or .env file and try again."
+        )
+        raise SystemExit(
+            "Hive Witness Active Key or Witness Name not set, check Environment or .env file and try again."
+        )
+
     # logging.info(f"Testnet: {os.getenv('TESTNET')}")
 
     try:
