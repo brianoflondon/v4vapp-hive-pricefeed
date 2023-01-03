@@ -20,6 +20,10 @@ Once it is running you can check on it with `docker logs v4vapp-pricefeed -f` to
 If you want to use Docker Compose there is an example in this repo. There is also a sample `.sample.env` file: edit this with your Witness name and key, save it as `.env` and you should be good to go.
 
 ```yaml
+version: '3'
+
+services:
+
   pricefeed:
     container_name: v4vapp-pricefeed
     image: brianoflondon/v4vapphivepricefeed:latest
