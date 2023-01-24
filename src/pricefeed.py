@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 from datetime import datetime, timedelta
 
 import httpx
@@ -67,7 +68,8 @@ def price_feed_update_needed(base: float) -> bool:
 async def publish_feed(publisher: str = "brianoflondon"):
     """Publishes a price feed to Hive"""
     try:
-        resp = httpx.get("https://api.v4v.app/v1/cryptoprices/?use_cache=true")
+        headers = {"user-agent": f"v4vapp-pricefeed/{__version__}"}
+        resp = httpx.get("https://api.v4v.app/v1/cryptoprices/?use_cache=true&pricefeed=true")
         if resp.status_code == 200:
             rjson = resp.json()
             base: float = rjson["v4vapp"]["Hive_HBD"]
@@ -114,7 +116,8 @@ async def publish_feed(publisher: str = "brianoflondon"):
             raise HiveKeyError
         logging.error(ex)
 
-    except (httpx.ConnectError, V4VApiError) as ex:
+    except (httpx.ConnectError, V4VApiError, TimeoutError) as ex:
+        logging.error(ex)
         raise
 
     except Exception as ex:
@@ -165,6 +168,7 @@ if __name__ == "__main__":
         level=logging.INFO if not debug else logging.DEBUG,
         format="%(asctime)s %(levelname)-8s %(module)-14s %(lineno) 5d : %(message)s",
         datefmt="%m-%dT%H:%M:%S",
+        stream=sys.stdout,
     )
     logging.info(f"-------V4VAPP Hive Pricefeed Version {__version__}  -")
     logging.info(f"Starting at {datetime.now()}")
