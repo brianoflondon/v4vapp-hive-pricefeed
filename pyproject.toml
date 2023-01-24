@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "v4vapp-hive-pricefeed"
-version = "1.0.3"
+version = "1.1.0"
 description = "An automatic price feed for Hive Witnesses"
 authors = ["brianoflondon <brian@v4v.app>"]
 license = "MIT"
@@ -15,6 +15,7 @@ lighthive = {version = "^0.4.0", allow-prereleases = true}
 [tool.poetry.group.dev.dependencies]
 black = "^22.12.0"
 pytest = "^7.2.0"
+flake8 = "^6.0.0"
 
 [build-system]
 requires = ["poetry-core"]
