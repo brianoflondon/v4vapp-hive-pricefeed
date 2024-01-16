@@ -15,4 +15,4 @@ RUN poetry install --no-root --only main
 
 COPY ./src /app/
 
-CMD [ "python", "pricefeed.py" ]
+CMD [ "python", "v4vapp_hive_pricefeed/pricefeed.py"]
