@@ -4,13 +4,15 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import httpx
 from lighthive.client import Client
 from lighthive.datastructures import Operation
 from lighthive.exceptions import RPCNodeException
+from single_source import get_version
 
-from v4vapp_hive_pricefeed import __version__
+__version__ = get_version(__name__, Path(__file__).parent.parent)
 
 HIVE_WITNESS_NAME = os.getenv("HIVE_WITNESS_NAME")
 HIVE_WITNESS_ACTIVE_KEY = os.getenv("HIVE_WITNESS_ACTIVE_KEY")
@@ -69,12 +71,16 @@ async def publish_feed(publisher: str = "brianoflondon"):
     """Publishes a price feed to Hive"""
     try:
         headers = {"user-agent": f"v4vapp-pricefeed/{__version__}"}
-        resp = httpx.get("https://api.v4v.app/v1/cryptoprices/?use_cache=true&pricefeed=true")
+        resp = httpx.get(
+            "https://api.v4v.app/v1/cryptoprices/?use_cache=true&pricefeed=true",
+            headers=headers,
+        )
         if resp.status_code == 200:
             rjson = resp.json()
             base: float = rjson["v4vapp"]["Hive_HBD"]
             if price_feed_update_needed(base):
                 client = Client(keys=[HIVE_WITNESS_ACTIVE_KEY])
+                logging.info(f"Trying to publish via node: {client.current_node}")
                 op = Operation(
                     "feed_publish",
                     {
@@ -86,13 +92,15 @@ async def publish_feed(publisher: str = "brianoflondon"):
                     },
                 )
                 trx = client.broadcast_sync(op=op, dry_run=False)
-                logging.info(f"Price feed published: {trx}")
+                logging.info(
+                    f"Price feed published: {trx} via node: {client.current_node}"
+                )
                 with open("price_feed.json", "w") as f:
                     json.dump(
                         {"base": base, "timestamp": datetime.utcnow().timestamp()}, f
                     )
         else:
-            logging.error(f"Problem with api.v4v.app")
+            logging.error("Problem with api.v4v.app")
             raise V4VApiError(resp)
 
     except ValueError as ex:
@@ -143,7 +151,8 @@ async def keep_publishing_price_feed():
         except (httpx.ConnectError, httpx.ReadTimeout, V4VApiError) as ex:
             sleep_time = 10 + 5 * errors**2
             logging.error(
-                f"Problem connecting to api.v4v.app: {ex} | Failure: {errors+1} | Sleeping: {sleep_time}s"
+                f"Problem connecting to api.v4v.app: {ex} | "
+                f"Failure: {errors+1} | Sleeping: {sleep_time}s"
             )
             errors += 1
             await asyncio.sleep(sleep_time)

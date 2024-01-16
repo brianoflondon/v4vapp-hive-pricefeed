@@ -5,6 +5,8 @@ services:
   pricefeed:
     container_name: v4vapp-pricefeed
     image: brianoflondon/v4vapphivepricefeed:latest
+    # build:
+    #   context: .
     logging:
       driver: "json-file"
       options:

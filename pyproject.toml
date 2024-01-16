@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "v4vapp-hive-pricefeed"
-version = "1.2.0"
+version = "1.2.1"
 description = "An automatic price feed for Hive Witnesses"
 authors = ["brianoflondon <brian@v4v.app>"]
 license = "MIT"
@@ -10,7 +10,7 @@ packages = [{include = "v4vapp_hive_pricefeed"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 single-source = "^0.3.0"
-lighthive = {version = "^0.4.0", allow-prereleases = true}
+lighthive = "^0.4.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.12.0"
