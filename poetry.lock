@@ -339,12 +339,12 @@ files = [
 
 [[package]]
 name = "lighthive"
-version = "0.4.2"
+version = "0.4.3"
 description = "A light python client to interact with the HIVE blockchain"
 optional = false
 python-versions = "*"
 files = [
-    {file = "lighthive-0.4.2.tar.gz", hash = "sha256:609875f3539a320f6053a501984a3d07e89f4d3db743128d346f9ebd3e5dcf6a"},
+    {file = "lighthive-0.4.3.tar.gz", hash = "sha256:cc41ce8ba0a19a654ddc881c5db6bb2b9bec95a100941721e9f3e61e4ab8dd25"},
 ]
 
 [package.dependencies]
