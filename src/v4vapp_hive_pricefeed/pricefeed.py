@@ -79,7 +79,11 @@ async def publish_feed(publisher: str = "brianoflondon"):
             rjson = resp.json()
             base: float = rjson["v4vapp"]["Hive_HBD"]
             if price_feed_update_needed(base):
-                client = Client(keys=[HIVE_WITNESS_ACTIVE_KEY])
+                client = Client(
+                    keys=[HIVE_WITNESS_ACTIVE_KEY],
+                )
+                client.node_list.append("https://rpc.podping.org/")
+                client.current_node = "https://rpc.podping.org"
                 logging.info(f"Trying to publish via node: {client.current_node}")
                 op = Operation(
                     "feed_publish",
