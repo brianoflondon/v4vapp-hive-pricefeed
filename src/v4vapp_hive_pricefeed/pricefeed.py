@@ -128,7 +128,7 @@ async def publish_feed(publisher: str = "brianoflondon"):
             raise HiveKeyError
         logging.error(ex)
 
-    except (httpx.ConnectError, V4VApiError, TimeoutError) as ex:
+    except (httpx.ConnectError, httpx.ReadTimeout, V4VApiError, TimeoutError) as ex:
         logging.error(ex)
         raise
 
