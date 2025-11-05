@@ -18,6 +18,7 @@ HIVE_WITNESS_NAME = os.getenv("HIVE_WITNESS_NAME")
 HIVE_WITNESS_ACTIVE_KEY = os.getenv("HIVE_WITNESS_ACTIVE_KEY")
 PRICE_FEED_MIN_PUBLISH_TIME_HOURS = 12
 PRICE_FEED_MIN_PERCENTAGE_DELTA = 0.02
+HANDSHAKE_TIMEOUT_SECONDS = 30
 
 
 class HiveKeyError(Exception):
@@ -26,6 +27,17 @@ class HiveKeyError(Exception):
 
 class V4VApiError(Exception):
     pass
+
+
+def get_hive_witness_details():
+    """Get Hive Witness details"""
+    try:
+        client = Client()
+        witness = client.get_witness_by_account(HIVE_WITNESS_NAME)
+        return witness
+    except Exception as ex:
+        logging.error(f"Problem getting witness details: {ex}")
+        return None
 
 
 def price_feed_update_needed(base: float) -> bool:
@@ -45,13 +57,11 @@ def price_feed_update_needed(base: float) -> bool:
                 quote_timediff = timedelta(
                     seconds=int(datetime.utcnow().timestamp() - prev_timestamp)
                 )
-                if abs(per_diff) < 0.02 and quote_timediff.total_seconds() < (
-                    12 * 3600
-                ):
+                if abs(per_diff) < 0.02 and quote_timediff.total_seconds() < (12 * 3600):
                     logging.info(
                         f"Price feed un-changed  | Base Now: {base:.3f} | "
                         f"Prev Base: {prev_base:.3f} | "
-                        f"Change: {per_diff*100:.1f} % | "
+                        f"Change: {per_diff * 100:.1f} % | "
                         f"Age: {quote_timediff}"
                     )
                     return False
@@ -59,7 +69,7 @@ def price_feed_update_needed(base: float) -> bool:
                     logging.info(
                         f"Price feed needs update | Base Now: {base:.3f} | "
                         f"Prev Base: {prev_base:.3f} | "
-                        f"Change: {per_diff*100:.1f} % | "
+                        f"Change: {per_diff * 100:.1f} % | "
                         f"Age: {quote_timediff}"
                     )
     except Exception as ex:
@@ -74,6 +84,7 @@ async def publish_feed(publisher: str = "brianoflondon"):
         resp = httpx.get(
             "https://api.v4v.app/v1/cryptoprices/?use_cache=true&pricefeed=true",
             headers=headers,
+            timeout=HANDSHAKE_TIMEOUT_SECONDS,
         )
         if resp.status_code == 200:
             rjson = resp.json()
@@ -81,6 +92,7 @@ async def publish_feed(publisher: str = "brianoflondon"):
             if price_feed_update_needed(base):
                 client = Client(
                     keys=[HIVE_WITNESS_ACTIVE_KEY],
+                    connect_timeout=HANDSHAKE_TIMEOUT_SECONDS,
                 )
                 client.node_list.append("https://rpc.podping.org/")
                 client.current_node = "https://rpc.podping.org"
@@ -96,22 +108,16 @@ async def publish_feed(publisher: str = "brianoflondon"):
                     },
                 )
                 trx = client.broadcast_sync(op=op, dry_run=False)
-                logging.info(
-                    f"Price feed published: {trx} via node: {client.current_node}"
-                )
+                logging.info(f"Price feed published: {trx} via node: {client.current_node}")
                 with open("price_feed.json", "w") as f:
-                    json.dump(
-                        {"base": base, "timestamp": datetime.utcnow().timestamp()}, f
-                    )
+                    json.dump({"base": base, "timestamp": datetime.utcnow().timestamp()}, f)
         else:
             logging.error("Problem with api.v4v.app")
             raise V4VApiError(resp)
 
     except ValueError as ex:
         if ["Error loading Base58 object" in arg for arg in ex.args]:
-            logging.error(
-                "Hive Active key is not a valid Base58 key, check and try again."
-            )
+            logging.error("Hive Active key is not a valid Base58 key, check and try again.")
             raise HiveKeyError
         logging.error(ex)
         raise HiveKeyError
@@ -122,9 +128,7 @@ async def publish_feed(publisher: str = "brianoflondon"):
 
     except RPCNodeException as ex:
         if ["Missing Active Authority" in arg for arg in ex.args]:
-            logging.error(
-                f"Given Active Key does not have correct authority for {publisher}"
-            )
+            logging.error(f"Given Active Key does not have correct authority for {publisher}")
             raise HiveKeyError
         logging.error(ex)
 
@@ -156,7 +160,7 @@ async def keep_publishing_price_feed():
             sleep_time = 10 + 5 * errors**2
             logging.error(
                 f"Problem connecting to api.v4v.app: {ex} | "
-                f"Failure: {errors+1} | Sleeping: {sleep_time}s"
+                f"Failure: {errors + 1} | Sleeping: {sleep_time}s"
             )
             errors += 1
             await asyncio.sleep(sleep_time)
@@ -185,6 +189,9 @@ if __name__ == "__main__":
     )
     logging.info(f"-------V4VAPP Hive Pricefeed Version {__version__}  -")
     logging.info(f"Starting at {datetime.now()}")
+
+    witness_details = get_hive_witness_details()
+    logging.info(f"Witness Details: \n{json.dumps(witness_details, indent=2)}")
 
     if not HIVE_WITNESS_ACTIVE_KEY or not HIVE_WITNESS_NAME:
         logging.error(
