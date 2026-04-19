@@ -35,6 +35,13 @@ Once it is running you can check on it with `docker logs v4vapp-pricefeed -f` to
 
 If you want to use Docker Compose there is an example in this repo. There is also a sample `.sample.env` file: edit this with your Witness name and key, save it as `.env` and you should be good to go.
 
+The `.env` file should be in the same directory as your `docker-compose.yml` file, and the relevant section of that file should look like this:
+```
+HIVE_WITNESS_NAME=hive-witness-name
+HIVE_WITNESS_ACTIVE_KEY=hive-witness-active-key
+```
+
+
 ```yaml
 services:
 
@@ -50,3 +57,20 @@ services:
       - ".env"
     restart: unless-stopped
 ```
+
+## Price feed update rules
+
+The feed is updated when any of these are true:
+
+- `price_feed.json` does not exist
+- the previous data does not contain a valid `base` price
+- the previous data does not contain a valid `timestamp`
+- the new `base` price differs from the previous one by at least `2%`
+- the previous feed is older than `12 hours`
+
+### Fallbacks
+
+- if `price_feed.json` is missing, malformed, or missing the required fields → update
+- if any exception occurs while checking the old feed → update
+
+So business rule: publish only when the new price has changed by at least 2% or the last published price is older than 12 hours.
