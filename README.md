@@ -1,6 +1,16 @@
 # v4vapp-hive-pricefeed
 This is a simple price feed for a Hive Witness to run.
 
+## Development setup with uv
+
+This project now uses `uv` for dependency management. To prepare a local environment, install `uv` and run:
+
+```shell
+uv sync --locked --no-install-project
+```
+
+Then use `uv run` to execute commands in the project environment, or run the script directly after dependency installation.
+
 ## Running from DockerHub
 
 As long as you already have Docker installed on your machine, the following command line will work
