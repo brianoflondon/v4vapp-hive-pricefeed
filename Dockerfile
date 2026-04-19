@@ -1,9 +1,9 @@
 FROM python:3.11
 
-RUN python -m pip install --no-cache-dir uv
+RUN python -m pip install --no-cache-dir uv==0.11.7
 
-# Copy pyproject and lockfile if present
-COPY ./pyproject.toml ./uv.lock* /app/
+# Copy pyproject and mandatory lockfile
+COPY ./pyproject.toml ./uv.lock /app/
 
 WORKDIR /app/
 

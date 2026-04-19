@@ -9,7 +9,13 @@ This project now uses `uv` for dependency management. To prepare a local environ
 uv sync --locked --no-install-project
 ```
 
-Then use `uv run` to execute commands in the project environment, or run the script directly after dependency installation.
+Then use `uv run` to execute commands in the project environment, for example:
+
+```shell
+uv run python src/v4vapp_hive_pricefeed/pricefeed.py
+```
+
+If you prefer to run `python` directly, first activate the project virtual environment (for example `source .venv/bin/activate` on macOS/Linux or `.venv\Scripts\activate` on Windows), otherwise the system Python may not see the installed dependencies.
 
 ## Running from DockerHub
 
