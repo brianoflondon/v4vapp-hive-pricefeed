@@ -1,6 +1,6 @@
 [project]
 name = "v4vapp-hive-pricefeed"
-version = "1.3.0"
+version = "1.3.1"
 description = "An automatic price feed for Hive Witnesses"
 readme = "README.md"
 requires-python = ">=3.11"
